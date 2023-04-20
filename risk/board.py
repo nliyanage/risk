@@ -111,7 +111,13 @@ class Board(object):
         Returns:
             bool: True if the input path is valid
         '''
-
+        ret = True
+        if len(path) <= 1:
+            return ret
+        ret &= path[0] not in path[1:]
+        ret &= path[1] in risk.definitions.territory_neighbors[path[0]]
+        ret &= self.is_valid_path(path[1:])
+        return ret
     
     def is_valid_attack_path(self, path):
         '''
@@ -130,7 +136,11 @@ class Board(object):
         Returns:
             bool: True if the path is an attack path
         '''
-
+        ret = True
+        ret &= self.is_valid_path(path)
+        if len(path) >= 2:
+            ret &= path[0] not in path[1:]
+            return ret
 
     def cost_of_attack_path(self, path):
         '''
@@ -143,6 +153,11 @@ class Board(object):
         Returns:
             bool: the number of enemy armies in the path
         '''
+        if self.is_valid_attack_path(path) is True:
+            ret = 0
+            for tid in path[1:]:
+                ret += self.data[tid].armies
+            return ret
 
 
     def shortest_path(self, source, target):
@@ -161,6 +176,13 @@ class Board(object):
         Returns:
             [int]: a valid path between source and target that has minimum length; this path is guaranteed to exist
         '''
+        dictionary = {}
+        dictionary[source] = [source]
+        queue = queue()
+        queue.append(source)
+        visited = set()
+        visited.add(source)
+        while queue:
 
 
     def can_fortify(self, source, target):
