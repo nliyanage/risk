@@ -1,6 +1,8 @@
 import os
 import random
+import copy
 from collections import namedtuple
+from collections import deque
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -136,11 +138,18 @@ class Board(object):
         Returns:
             bool: True if the path is an attack path
         '''
-        ret = True
-        ret &= self.is_valid_path(path)
-        if len(path) >= 2:
-            ret &= path[0] not in path[1:]
-            return ret
+        if not self.is_valid_path(path) or len(path) < 2:
+            return False
+        else:
+            for i in range(len(path) - 1):
+                if self.owner(path[0]) == self.owner(path[i+1]):
+                    return False
+        return True
+    #    ret = True
+     #   ret &= self.is_valid_path(path)
+      #  if len(path) >= 2:
+       #     ret &= path[0] not in path[1:]
+        #    return ret
 
     def cost_of_attack_path(self, path):
         '''
@@ -178,11 +187,21 @@ class Board(object):
         '''
         dictionary = {}
         dictionary[source] = [source]
-        queue = queue()
-        queue.append(source)
+        deque1 = deque()
+        deque1.append(source)
         visited = set()
         visited.add(source)
-        while queue:
+        while deque1:
+            current_territory = deque1.popleft()
+            if current_territory == target:
+                return dictionary[current_territory]
+            for territory in risk.definitions.territory_neighbors[current_territory]:
+                if territory not in visited:
+                    dictionarycopy = copy.deepcopy(dictionary[current_territory])
+                    dictionarycopy.append(territory)
+                    dictionary[territory] = dictionarycopy
+                    deque1.append(territory)
+                visited.add(territory)
 
 
     def can_fortify(self, source, target):
@@ -198,7 +217,25 @@ class Board(object):
         Returns:
             bool: True if reinforcing the target from the source territory is a valid move
         '''
-
+        dictionary = {}
+        dictionary[source] = [source]
+        deque1 = deque()
+        deque1.append(source)
+        visited = set()
+        visited.add(source)
+        while deque1:
+            current_territory = deque1.popleft()
+            if current_territory == target:
+                return True
+            friendly_ter_ids = [territory.territory_id for territory in self.friendly_neighbors(current_territory)]
+            for territory in friendly_ter_ids:
+                if territory not in visited:
+                    dictionarycopy = copy.deepcopy(dictionary[current_territory])
+                    dictionarycopy.append(territory)
+                    dictionary[territory] = dictionarycopy
+                    deque1.append(territory)
+                visited.add(territory)
+        return False
 
     def cheapest_attack_path(self, source, target):
         '''
