@@ -145,11 +145,6 @@ class Board(object):
                 if self.owner(path[0]) == self.owner(path[i+1]):
                     return False
         return True
-    #    ret = True
-     #   ret &= self.is_valid_path(path)
-      #  if len(path) >= 2:
-       #     ret &= path[0] not in path[1:]
-        #    return ret
 
     def cost_of_attack_path(self, path):
         '''
@@ -263,24 +258,26 @@ class Board(object):
         visited = set()
         visited.add(source)
 
-        while pqueue:
+        while not pqueue.empty():
             current_priority, current_territory = pqueue.get()
             if current_territory == target:
                 return dictionary[current_territory]
             n_current_ter = risk.definitions.territory_neighbors[current_territory]
             for ter in n_current_ter:
                 if ter not in visited and sourceowner != self.owner(ter):
-                    dictionarycopy = copy.deepcopy(dictionary[current_territory])
+                    dictionarycopy = dictionary[current_territory].copy()
                     dictionarycopy.append(ter)
                     priority = current_priority + self.data[ter].armies
+                    p = priority
+                    t = ter
                     if ter not in [x[1] for x in pqueue.queue]:
                         dictionary[ter] = dictionarycopy
                         pqueue.put((priority, ter))
-                    elif priority < min([x[0] for x in pqueue.queue if x[1] == ter]):
+                    elif p < min([x[0] for x in pqueue.queue if x[1] == t]):
                         dictionary[ter] = dictionarycopy
-                        for i, (p, t) in range(len(pqueue.queue)):
+                        for i, (p, t) in enumerate(pqueue.queue):
                             if t == ter:
-                                pqueue[i] = (priority, territory)
+                                pqueue[i] = (priority, ter)
                                 break
             visited.add(current_territory)
 
@@ -293,6 +290,8 @@ class Board(object):
         Returns:
             bool: True if a valid attack path exists between source and target; else False
         '''
+        from collections import deque
+        import copy
 
         sourceowner = self.owner(source)
         if sourceowner == self.owner(target):
@@ -306,16 +305,16 @@ class Board(object):
         visited.add(source)
 
         while deque1:
-            current_territory = deque1.popleft
+            current_territory = deque1.popleft()
             if current_territory == target:
                 return True
             n_current_ter = risk.definitions.territory_neighbors[current_territory]
             for ter in n_current_ter:
-                if ter not in visited and self.owner(territory) != sourceowner:
-                    visited.add(territory)
-                    dictionarycopy = copy.deepcopy(dictionary[current_territory])
+                if ter not in visited and self.owner(ter) != sourceowner:
+                    visited.add(ter)
+                    dictionarycopy = copy.copy(dictionary[current_territory])
                     dictionarycopy.append(ter)
-                    dictionary[territory] = dictionarycopy
+                    dictionary[ter] = dictionarycopy
                     deque1.append(ter)
         return False
 
