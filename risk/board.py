@@ -251,6 +251,38 @@ class Board(object):
             [int]: a list of territory_ids representing the valid attack path; if no path exists, then it returns None instead
         '''
 
+        from queue import PriorityQueue
+
+        sourceowner = self.owner(source)
+        if sourceowner == self.owner(target):
+            return None
+
+        dictionary = {source: [source]}
+        pqueue = PriorityQueue()
+        pqueue.put((0, source))
+        visited = set()
+        visited.add(source)
+
+        while pqueue:
+            current_priority, current_territory = pqueue.get()
+            if current_territory == target:
+                return dictionary[current_territory]
+            n_current_ter = risk.definitions.territory_neighbors[current_territory]
+            for ter in n_current_ter:
+                if ter not in visited and sourceowner != self.owner(ter):
+                    dictionarycopy = copy.deepcopy(dictionary[current_territory])
+                    dictionarycopy.append(ter)
+                    priority = current_priority + self.data[ter].armies
+                    if ter not in [x[1] for x in pqueue.queue]:
+                        dictionary[ter] = dictionarycopy
+                        pqueue.put((priority, ter))
+                    elif priority < min([x[0] for x in pqueue.queue if x[1] == ter]):
+                        dictionary[ter] = dictionarycopy
+                        for i, (p, t) in range(len(pqueue.queue)):
+                            if t == ter:
+                                pqueue[i] = (priority, territory)
+                                break
+            visited.add(current_territory)
 
     def can_attack(self, source, target):
         '''
@@ -262,6 +294,30 @@ class Board(object):
             bool: True if a valid attack path exists between source and target; else False
         '''
 
+        sourceowner = self.owner(source)
+        if sourceowner == self.owner(target):
+            return False
+
+        dictionary = {}
+        dictionary[source] = [source]
+        deque1 = deque()
+        deque1.append(source)
+        visited = set()
+        visited.add(source)
+
+        while deque1:
+            current_territory = deque1.popleft
+            if current_territory == target:
+                return True
+            n_current_ter = risk.definitions.territory_neighbors[current_territory]
+            for ter in n_current_ter:
+                if ter not in visited and self.owner(territory) != sourceowner:
+                    visited.add(territory)
+                    dictionarycopy = copy.deepcopy(dictionary[current_territory])
+                    dictionarycopy.append(ter)
+                    dictionary[territory] = dictionarycopy
+                    deque1.append(ter)
+        return False
 
     # ======================= #
     # == Continent Methods == #
